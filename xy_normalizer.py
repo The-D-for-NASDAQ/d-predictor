@@ -8,21 +8,26 @@ def make_x_and_y(d, x_block_length, y_block_length):
     d_total_minutes = d.shape[2]
 
     highest_bid_position = int(d_num_price_levels / 2)
-    X_y_pointer = 0
 
-    X_y_entries_count = d_total_minutes - x_block_length  # X_y_pointer += 1
+    X_y_check_entries_count = 0
+    X_y_check_entries_pointer = 0
+    while X_y_check_entries_pointer + x_block_length + y_block_length < d_total_minutes:
+        if d[5, 0, X_y_check_entries_pointer] < d[5, 0, X_y_check_entries_pointer + x_block_length + y_block_length - 1]:
+            X_y_check_entries_count += 1
+        X_y_check_entries_pointer += 1
 
-    X = np.zeros((X_y_entries_count, d_num_layers * d_num_price_levels * x_block_length), np.float32)
-    y = np.zeros((X_y_entries_count, 3), np.float32)
-
-    while X_y_pointer + x_block_length + y_block_length < d_total_minutes:
+    d_pointer = 0
+    last_recorded_X_y = 0
+    X = np.zeros((X_y_check_entries_count, d_num_layers * d_num_price_levels * x_block_length), np.float32)
+    y = np.zeros((X_y_check_entries_count, 3), np.float32)
+    while d_pointer + x_block_length + y_block_length < d_total_minutes:
         # slices takes from first but not including last, selecting takes particular!!
-        if d[5, 0, X_y_pointer] > d[5, 0, X_y_pointer + x_block_length + y_block_length - 1]:
-            X_y_pointer += 1
+        if d[5, 0, d_pointer] > d[5, 0, d_pointer + x_block_length + y_block_length - 1]:
+            d_pointer += 1
             continue
 
-        new_X = d[:, :, X_y_pointer:X_y_pointer + x_block_length]
-        raw_new_y = d[0, highest_bid_position, X_y_pointer + x_block_length + y_block_length - 1]
+        new_X = d[:, :, d_pointer:d_pointer + x_block_length]
+        raw_new_y = d[0, highest_bid_position, d_pointer + x_block_length + y_block_length - 1]
         last_X_price = new_X[0, highest_bid_position, -1]
 
         if raw_new_y - last_X_price > 0:
@@ -32,10 +37,11 @@ def make_x_and_y(d, x_block_length, y_block_length):
         else:
             new_y = np.array([0, 1, 0], np.float32)
 
-        X[X_y_pointer] = new_X.flatten()
-        y[X_y_pointer] = new_y
+        X[last_recorded_X_y] = new_X.flatten()
+        y[last_recorded_X_y] = new_y
 
-        X_y_pointer += 1
+        last_recorded_X_y += 1
+        d_pointer += 1
 
     return X, y
 
@@ -69,10 +75,20 @@ def normalize_data(X, y):
     return shuffle(X, y)
 
 
-def make_train_and_test_sets(X, y, train_data_pointer):
-    X_train = X[0:train_data_pointer]
-    y_train = y[0:train_data_pointer]
-    X_test = X[train_data_pointer:-1]
-    y_test = y[train_data_pointer:-1]
+def make_train_and_test_sets(X, y, desired_test_percentage, desired_test_size):
+    # this function will get larger train set from pointer or batch size
+
+    if len(X) == 0:
+        exit('X is empty!!!')
+
+    pointer = min(
+        len(X) - int(len(X) * desired_test_percentage),
+        len(X) - desired_test_size
+    )
+
+    X_train = X[:pointer]
+    y_train = y[:pointer]
+    X_test = X[pointer:]
+    y_test = y[pointer:]
 
     return X_train, y_train, X_test, y_test
