@@ -76,7 +76,7 @@ def normalize_data(X, y):
 
 
 def make_train_and_test_sets(X, y, desired_test_percentage, desired_test_size):
-    # this function will get larger train set from pointer or batch size
+    # this function will get larger test set from pointer or batch size
 
     if len(X) == 0:
         exit('X is empty!!!')
