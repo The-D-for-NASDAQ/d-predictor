@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.utils import shuffle
 
 
-def make_x_and_y(d, x_block_length, y_block_length):  # TODO: check everything!!!! (pay attention on slices and pointers)
+def make_x_and_y(d, x_block_length, y_block_length):
     d_num_layers = d.shape[0]
     d_num_price_levels = d.shape[1]
     d_total_minutes = d.shape[2]
