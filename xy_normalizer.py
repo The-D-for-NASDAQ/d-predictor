@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.utils import shuffle
 
 
-def make_x_and_y(d, x_block_length, y_block_length):
+def make_x_and_y(d, x_block_length, y_block_length):  # TODO: check everything!!!! (pay attention on slices and pointers)
     d_num_layers = d.shape[0]
     d_num_price_levels = d.shape[1]
     d_total_minutes = d.shape[2]
@@ -12,16 +12,17 @@ def make_x_and_y(d, x_block_length, y_block_length):
 
     X_y_entries_count = d_total_minutes - x_block_length  # X_y_pointer += 1
 
-    X = np.zeros((X_y_entries_count, d_num_price_levels * x_block_length * d_num_layers), np.float32)
+    X = np.zeros((X_y_entries_count, d_num_layers * d_num_price_levels * x_block_length), np.float32)
     y = np.zeros((X_y_entries_count, 3), np.float32)
 
     while X_y_pointer + x_block_length + y_block_length < d_total_minutes:
-        # if d[5, 0, X_y_pointer + x_block_length + y_block_length] < x_block_length - y_block_length - 1:
-        #     X_y_pointer += 1
-        #     continue
+        # slices takes from first but not including last, selecting takes particular!!
+        if d[5, 0, X_y_pointer] > d[5, 0, X_y_pointer + x_block_length + y_block_length - 1]:
+            X_y_pointer += 1
+            continue
 
         new_X = d[:, :, X_y_pointer:X_y_pointer + x_block_length]
-        raw_new_y = d[0, highest_bid_position, X_y_pointer + x_block_length + y_block_length]
+        raw_new_y = d[0, highest_bid_position, X_y_pointer + x_block_length + y_block_length - 1]
         last_X_price = new_X[0, highest_bid_position, -1]
 
         if raw_new_y - last_X_price > 0:
@@ -31,15 +32,12 @@ def make_x_and_y(d, x_block_length, y_block_length):
         else:
             new_y = np.array([0, 1, 0], np.float32)
 
-        # print(new_X[5, 0, :])
-
         X[X_y_pointer] = new_X.flatten()
         y[X_y_pointer] = new_y
 
         X_y_pointer += 1
 
     return X, y
-
 
 
 def normalize_data(X, y):
