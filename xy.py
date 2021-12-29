@@ -14,8 +14,9 @@ def make_x_and_y(d, x_block_length, y_block_length):
     while X_y_check_entries_pointer + x_block_length + y_block_length < d_total_minutes:
         check_time_entries = d[5, 0, X_y_check_entries_pointer:X_y_check_entries_pointer + x_block_length + y_block_length]
         check_price_entries = d[0, highest_bid_position-1:highest_bid_position+1, X_y_check_entries_pointer:X_y_check_entries_pointer + x_block_length + y_block_length]
+        check_price_difference = check_price_entries[0] - check_price_entries[1]
 
-        if check_time_entries[0] < check_time_entries[-1] and 0 not in check_price_entries:
+        if check_time_entries[0] < check_time_entries[-1] and np.any(check_price_difference >= 0) and np.any(check_price_difference <= 0.5):
             X_y_check_entries_count += 1
 
         X_y_check_entries_pointer += 1
@@ -27,8 +28,9 @@ def make_x_and_y(d, x_block_length, y_block_length):
     while d_pointer + x_block_length + y_block_length < d_total_minutes:
         time_entries = d[5, 0, d_pointer:d_pointer + x_block_length + y_block_length]
         price_entries = d[0, highest_bid_position-1:highest_bid_position+1, d_pointer:d_pointer + x_block_length + y_block_length]
+        price_difference = price_entries[0] - price_entries[1]
 
-        if time_entries[0] > time_entries[-1] or 0 in price_entries:
+        if time_entries[0] > time_entries[-1] or np.any(price_difference < 0) or np.any(price_difference > 0.5):
             d_pointer += 1
             continue
 
@@ -45,7 +47,9 @@ def make_x_and_y(d, x_block_length, y_block_length):
 
         X[last_recorded_X_y] = np.concatenate((
             new_X.flatten(),
-            price_entries[:, :-y_block_length].flatten(),
+
+            price_entries[0, :-y_block_length] - price_entries[0, 0],
+            price_entries[1, :-y_block_length] - price_entries[1, 0],
             time_entries[:-y_block_length]
         ))
         y[last_recorded_X_y] = new_y
