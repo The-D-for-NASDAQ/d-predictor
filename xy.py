@@ -22,7 +22,7 @@ def make_x_and_y(d, x_block_length, y_block_length):
 
     d_pointer = 0
     last_recorded_X_y = 0
-    X = np.zeros((X_y_check_entries_count, d_num_layers * d_num_price_levels * x_block_length), np.float32)
+    X = np.zeros((X_y_check_entries_count, (d_num_layers - 2) * d_num_price_levels * x_block_length + 20 + 10), np.float32)
     y = np.zeros((X_y_check_entries_count, 3), np.float32)
     while d_pointer + x_block_length + y_block_length < d_total_minutes:
         time_entries = d[5, 0, d_pointer:d_pointer + x_block_length + y_block_length]
@@ -32,14 +32,9 @@ def make_x_and_y(d, x_block_length, y_block_length):
             d_pointer += 1
             continue
 
-        # slices takes from first but not including last, selecting takes particular!!
-        if d[5, 0, d_pointer] > d[5, 0, d_pointer + x_block_length + y_block_length - 1]:
-            d_pointer += 1
-            continue
-
-        new_X = d[:, :, d_pointer:d_pointer + x_block_length]
-        raw_new_y = d[0, highest_bid_position, d_pointer + x_block_length + y_block_length - 1]
-        last_X_price = new_X[0, highest_bid_position, -1]
+        new_X = d[1:5, :, d_pointer:d_pointer + x_block_length]
+        raw_new_y = price_entries[1, -1]
+        last_X_price = price_entries[1, -1-y_block_length]
 
         if raw_new_y - last_X_price > 0:
             new_y = np.array([0, 0, 1], np.float32)
@@ -48,7 +43,11 @@ def make_x_and_y(d, x_block_length, y_block_length):
         else:
             new_y = np.array([0, 1, 0], np.float32)
 
-        X[last_recorded_X_y] = new_X.flatten()
+        X[last_recorded_X_y] = np.concatenate((
+            new_X.flatten(),
+            price_entries[:, :-y_block_length].flatten(),
+            time_entries[:-y_block_length]
+        ))
         y[last_recorded_X_y] = new_y
 
         last_recorded_X_y += 1

@@ -10,9 +10,9 @@ best_checkpoint_path = os.path.join('checkpoints', 'best_weights.hdf5')
 def create_model():
     model = Sequential()
 
-    model.add(Dense(2400, activation=lambda x: tf.nn.leaky_relu(x, alpha=0.01)))
-    model.add(Dense(2400, activation=lambda x: tf.nn.leaky_relu(x, alpha=0.01)))
-    model.add(Dense(600, activation=lambda x: tf.nn.leaky_relu(x, alpha=0.01)))
+    model.add(Dense(1630, activation=lambda x: tf.nn.leaky_relu(x, alpha=0.01)))
+    model.add(Dense(1630, activation=lambda x: tf.nn.leaky_relu(x, alpha=0.01)))
+    model.add(Dense(400, activation=lambda x: tf.nn.leaky_relu(x, alpha=0.01)))
     model.add(Dense(50, activation=lambda x: tf.nn.leaky_relu(x, alpha=0.01)))
     model.add(Dense(3, activation='softmax'))
 
