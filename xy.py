@@ -12,8 +12,12 @@ def make_x_and_y(d, x_block_length, y_block_length):
     X_y_check_entries_count = 0
     X_y_check_entries_pointer = 0
     while X_y_check_entries_pointer + x_block_length + y_block_length < d_total_minutes:
-        if d[5, 0, X_y_check_entries_pointer] < d[5, 0, X_y_check_entries_pointer + x_block_length + y_block_length - 1]:
+        check_time_entries = d[5, 0, X_y_check_entries_pointer:X_y_check_entries_pointer + x_block_length + y_block_length]
+        check_price_entries = d[0, highest_bid_position-1:highest_bid_position+1, X_y_check_entries_pointer:X_y_check_entries_pointer + x_block_length + y_block_length]
+
+        if check_time_entries[0] < check_time_entries[-1] and 0 not in check_price_entries:
             X_y_check_entries_count += 1
+
         X_y_check_entries_pointer += 1
 
     d_pointer = 0
@@ -21,6 +25,13 @@ def make_x_and_y(d, x_block_length, y_block_length):
     X = np.zeros((X_y_check_entries_count, d_num_layers * d_num_price_levels * x_block_length), np.float32)
     y = np.zeros((X_y_check_entries_count, 3), np.float32)
     while d_pointer + x_block_length + y_block_length < d_total_minutes:
+        time_entries = d[5, 0, d_pointer:d_pointer + x_block_length + y_block_length]
+        price_entries = d[0, highest_bid_position-1:highest_bid_position+1, d_pointer:d_pointer + x_block_length + y_block_length]
+
+        if time_entries[0] > time_entries[-1] or 0 in price_entries:
+            d_pointer += 1
+            continue
+
         # slices takes from first but not including last, selecting takes particular!!
         if d[5, 0, d_pointer] > d[5, 0, d_pointer + x_block_length + y_block_length - 1]:
             d_pointer += 1
