@@ -93,19 +93,18 @@ def main(date_to_process):
     if converted_data is None:
         return
 
-    prediction = model.predict(converted_data)[0]
+    prediction = model.predict(converted_data)
     p_index = np.argmax(prediction)
 
     if last_price and last_p_index is not None:
-        price_difference = new_price - last_price
         if last_p_index == 0:
-            if price_difference < 0:
+            if new_price < last_price:
                 print(bcolors.UPGREEN + 'Down ▼ prediction was correct' + bcolors.ENDC)
             else:
                 print(bcolors.DOWNRED + 'Down ▼ prediction was incorrect' + bcolors.ENDC)
 
         if last_p_index == 2:
-            if price_difference > 0:
+            if new_price > last_price:
                 print(bcolors.UPGREEN + 'Up ▲ prediction was correct' + bcolors.ENDC)
             else:
                 print(bcolors.DOWNRED + 'Up ▲ prediction was incorrect' + bcolors.ENDC)

@@ -38,9 +38,9 @@ def make_x_and_y(d, x_block_length, y_block_length):
         raw_new_y = price_entries[1, -1]
         last_X_price = price_entries[1, -1-y_block_length]
 
-        if raw_new_y - last_X_price > 0:
+        if raw_new_y > last_X_price:
             new_y = np.array([0, 0, 1], np.float32)
-        elif raw_new_y - last_X_price < 0:
+        elif raw_new_y < last_X_price:
             new_y = np.array([1, 0, 0], np.float32)
         else:
             new_y = np.array([0, 1, 0], np.float32)
@@ -73,17 +73,15 @@ def normalize_data(X, y):
     X_with_zero_answer, y_with_zero_answer = shuffle(X_with_zero_answer, y_with_zero_answer)
     X_with_one_answer, y_with_one_answer = shuffle(X_with_one_answer, y_with_one_answer)
 
-    min_answer_group_length = min(len(y_with_minus_one_answer), len(y_with_zero_answer), len(y_with_one_answer))
-
     X = np.concatenate((
-        X_with_minus_one_answer[:min_answer_group_length],
-        X_with_zero_answer[:min_answer_group_length],
-        X_with_one_answer[:min_answer_group_length]
+        np.repeat(X_with_minus_one_answer, 12, axis=0),
+        X_with_zero_answer,
+        np.repeat(X_with_one_answer, 12, axis=0)
     ))
     y = np.concatenate((
-        y_with_minus_one_answer[:min_answer_group_length],
-        y_with_zero_answer[:min_answer_group_length],
-        y_with_one_answer[:min_answer_group_length]
+        np.repeat(y_with_minus_one_answer, 12, axis=0),
+        y_with_zero_answer,
+        np.repeat(y_with_one_answer, 12, axis=0)
     ))
 
     return shuffle(X, y)

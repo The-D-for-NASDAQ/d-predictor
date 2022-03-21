@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
-from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.python.keras.callbacks import ModelCheckpoint
 
 best_checkpoint_path = os.path.join('checkpoints', 'best_weights.hdf5')
 
@@ -35,8 +35,7 @@ def fit_model(model, batch_size, epochs, X_train, y_train, X_test, y_test):
                   validation_data=(X_test[:test_data_slice], y_test[:test_data_slice]),
                   callbacks=[
                       ModelCheckpoint(best_checkpoint_path, monitor='val_accuracy',
-                                      save_best_only=True, verbose=1, save_weights_only=True),
-                      TensorBoard(log_dir='logs', histogram_freq=10)
+                                      save_best_only=True, verbose=1, save_weights_only=True)
                   ],
                   )
     except KeyboardInterrupt:
